@@ -1,0 +1,23 @@
+{
+  "name": "image-shrink",
+  "version": "1.0.0",
+  "description": "App to optimize images",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "nodemon --exec electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stevenespinal/image-shrink.git"
+  },
+  "author": "Steven Espinal",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/stevenespinal/image-shrink/issues"
+  },
+  "homepage": "https://github.com/stevenespinal/image-shrink#readme",
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}
