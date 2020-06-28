@@ -1,6 +1,13 @@
-const { app, BrowserWindow, Menu } = require("electron");
+const path = require("path");
+const os = require("os");
+const imagemin = require("imagemin");
+const imageminMozjpeg = require("imagemin-mozjpeg");
+const imageminPngquant = require("imagemin-pngquant");
+const slash = require("slash");
+const { app, BrowserWindow, Menu, ipcMain, shell } = require("electron");
+const log = require("electron-log");
 
-process.env.NODE_ENV = "development";
+process.env.NODE_ENV = "production";
 
 const isDev = process.env.NODE_ENV !== "production" ? true : false;
 const isMac = process.platform === "darwin" ? true : false;
@@ -11,12 +18,21 @@ let aboutWindow;
 
 function createMainWindow() {
   mainWindow = new BrowserWindow({
-    width: 500,
+    width: isDev ? 800 : 500,
     height: 600,
     title: "Image Shrink",
     icon: `${__dirname}/assets/Icon_256x256.png`,
     resizable: isDev,
+    webPreferences: {
+      // allows us to import node modules in html scripts
+      nodeIntegration: true,
+    },
+    enableRemoteModule: true,
   });
+
+  if (isDev) {
+    mainWindow.webContents.openDevTools();
+  }
 
   // mainWindow.loadURL(`file://${__dirname}/app/index.html`);
   mainWindow.loadFile(`./app/index.html`);
@@ -51,6 +67,34 @@ app.on("activate", () => {
     createMainWindow();
   }
 });
+
+ipcMain.on("image:minimize", (e, data) => {
+  // console.log(data);
+  data.dest = path.join(`${os.homedir}\\Desktop\\imageshrink`);
+  shrinkImage(data);
+});
+
+async function shrinkImage({ imgPath, quality, dest }) {
+  const pngQuality = quality / 100;
+  try {
+    const files = await imagemin([slash(imgPath)], {
+      destination: dest,
+      plugins: [
+        imageminMozjpeg({ quality }),
+        imageminPngquant({
+          quality: [pngQuality, pngQuality],
+        }),
+      ],
+    });
+    // console.log(files);
+    shell.openPath(dest);
+    log.info(files);
+    mainWindow.webContents.send("image:done");
+  } catch (error) {
+    console.error(error);
+    log.error(error);
+  }
+}
 
 app.on("ready", () => {
   createMainWindow();
